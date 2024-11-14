@@ -31,6 +31,7 @@ var (
 	maxThreads   = flag.Int("max", 100, "并发请求最大协程数")                                       // 最大协程数
 	speedTest    = flag.Int("speedtest", 5, "下载测速协程数量,设为0禁用测速")                            // 下载测速协程数量
 	speedLimit   = flag.Int("speedlimit", 0, "最低下载速度(MB/s)")                                   // 最低下载速度
+	maxIP        = flag.Int("maxip", 0, "最大保存满足speedLimit的ip个数")                                   // 最大保存ip个数
     speedTestURL = flag.String("url", "speed.cloudflare.com/__down?bytes=500000000", "测速文件地址") // 测速文件地址
 	enableTLS    = flag.Bool("tls", true, "是否启用TLS")                                       // TLS是否启用
 	TCPurl       = flag.String("tcpurl", "www.speedtest.net", "TCP请求地址")                   // TCP请求地址
@@ -115,6 +116,7 @@ func main() {
 	thread := make(chan struct{}, *maxThreads)
 
 	var count int
+	var countspeedL int
 	total := len(ips)
 
 	for _, ip := range ips {
@@ -230,6 +232,9 @@ func main() {
 		fmt.Println("没有发现有效的IP")
 		return
 	}
+	if *maxIP == 0{
+		*maxIP = len(resultChan)
+	}
 	var results []speedtestresult
 	if *speedTest > 0 {
 		fmt.Printf("开始测速\n")
@@ -248,7 +253,11 @@ func main() {
 				for res := range resultChan {
 
 					downloadSpeed := getDownloadSpeed(res.ip, res.port)
+					if downloadSpeed > speedLimit {
+			                    countspeedL++
+			                }
 					results = append(results, speedtestresult{result: res, downloadSpeed: downloadSpeed})
+					
 
 					count++
 					percentage := float64(count) / float64(total) * 100
@@ -256,6 +265,10 @@ func main() {
 					if count == total {
 						fmt.Printf("已完成: %.2f%%\033[0\n", percentage)
 					}
+					// 当countspeedL大于等于maxIP时结束函数
+			                if countspeedL > maxIP {
+			                    return
+			                }
 				}
 			}()
 		}
