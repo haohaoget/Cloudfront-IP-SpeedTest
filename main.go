@@ -253,7 +253,7 @@ func main() {
 				for res := range resultChan {
 
 					downloadSpeed := getDownloadSpeed(res.ip, res.port)
-					if downloadSpeed > speedLimit {
+					if downloadSpeed > float64(*speedLimit) {
 			                    countspeedL++
 			                }
 					results = append(results, speedtestresult{result: res, downloadSpeed: downloadSpeed})
@@ -266,7 +266,7 @@ func main() {
 						fmt.Printf("已完成: %.2f%%\033[0\n", percentage)
 					}
 					// 当countspeedL大于等于maxIP时结束函数
-			                if countspeedL > maxIP {
+			                if countspeedL > *maxIP {
 			                    return
 			                }
 				}
