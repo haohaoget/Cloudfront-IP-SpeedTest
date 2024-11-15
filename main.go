@@ -237,7 +237,7 @@ func main() {
 	}
 	sort.Slice(resultChan, func(i, j int) bool {
 		return resultChan[i].tcpDuration < resultChan[j].tcpDuration
-	}
+	})
 	var results []speedtestresult
 	if *speedTest > 0 {
 		fmt.Printf("开始测速\n")
