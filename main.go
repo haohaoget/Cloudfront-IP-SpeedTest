@@ -236,19 +236,19 @@ func main() {
 		*maxIP = len(resultChan)
 	}
 	// 将 resultChan 中的数据读取到一个切片中
-	results := make([]result, 0, len(resultChan))
+	resultChanresults := make([]result, 0, len(resultChan))
 	for r := range resultChan {
-	    results = append(results, r)
+	    resultChanresults = append(resultChanresults, r)
 	}
 	
 	// 对切片进行排序
-	sort.Slice(results, func(i, j int) bool {
-	    return results[i].tcpDuration < results[j].tcpDuration
+	sort.Slice(resultChanresults, func(i, j int) bool {
+	    return resultChanresults[i].tcpDuration < resultChanresults[j].tcpDuration
 	})
 	
 	// 将排序后的结果写回到 resultChan 中
-	resultChan = make(chan result, len(results))
-	for _, r := range results {
+	resultChan = make(chan result, len(resultChanresults))
+	for _, r := range resultChanresults {
 	    resultChan <- r
 	}
 	var results []speedtestresult
