@@ -26,8 +26,12 @@ const (
 )
 
 var (
+	// 获取当前时间并格式化为"年月日小时分钟"的格式
+	currentTime := time.Now().Format("20060102-15-04")
+	// 创建带有时间戳的输出文件名
+	outFileName := fmt.Sprintf("%s.csv", currentTime)
 	File         = flag.String("file", "ip.txt", "IP地址文件名称,格式为 ip port ,就是IP和端口之间用空格隔开")   // IP地址文件名称
-	outFile      = flag.String("outfile", "ip.csv", "输出文件名称")                              // 输出文件名称
+	outFile      = flag.String("outfile", outFileName, "输出文件名称")                              // 输出文件名称
 	maxThreads   = flag.Int("max", 100, "并发请求最大协程数")                                       // 最大协程数
 	speedTest    = flag.Int("speedtest", 5, "下载测速协程数量,设为0禁用测速")                            // 下载测速协程数量
 	speedLimit   = flag.Int("speedlimit", 0, "最低下载速度(MB/s)")                                   // 最低下载速度
