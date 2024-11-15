@@ -235,9 +235,22 @@ func main() {
 	if *maxIP == 0{
 		*maxIP = len(resultChan)
 	}
-	sort.Slice(resultChan, func(i, j int) bool {
-		return resultChan[i].tcpDuration < resultChan[j].tcpDuration
+	// 将 resultChan 中的数据读取到一个切片中
+	results := make([]result, 0, len(resultChan))
+	for r := range resultChan {
+	    results = append(results, r)
+	}
+	
+	// 对切片进行排序
+	sort.Slice(results, func(i, j int) bool {
+	    return results[i].tcpDuration < results[j].tcpDuration
 	})
+	
+	// 将排序后的结果写回到 resultChan 中
+	resultChan = make(chan result, len(results))
+	for _, r := range results {
+	    resultChan <- r
+	}
 	var results []speedtestresult
 	if *speedTest > 0 {
 		fmt.Printf("开始测速\n")
