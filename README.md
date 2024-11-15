@@ -16,9 +16,10 @@ ipspeedtest 可以接受以下参数：
 
 - file: IP地址文件名称 (default "ip.txt")
 - max: 并发请求最大协程数 (default 100)
-- outfile: 输出文件名称 (default "ip.csv")
+- outfile: 输出文件名称 (default "年月日-小时-分钟.csv")
 - speedtest: 下载测速协程数量,设为0禁用测速 (default 5)
 - speedlimit: 最低下载速度(MB/s) (default 0)（测速结果保留所设置以上）
+- maxip: 最大保存满足speedLimit的ip个数(default 0 无限制)（测速默认低延迟优先保证保留ip延迟最优）
 - tls: 是否启用TLS (default true)
 - url: 测速文件地址 (default "speed.cloudflare.com/__down?bytes=500000000")
 
