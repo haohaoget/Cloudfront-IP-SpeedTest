@@ -36,6 +36,10 @@ var (
 	speedTest    = flag.Int("speedtest", 5, "下载测速协程数量,设为0禁用测速")                            // 下载测速协程数量
 	speedLimit   = flag.Int("speedlimit", 0, "最低下载速度(MB/s)")                                   // 最低下载速度
 	maxIP        = flag.Int("maxip", 0, "最大保存满足speedLimit的ip个数")                                   // 最大保存ip个数
+	saveLimit    = flag.float64("savelimit", 0.5, "最低保存速度(MB/s)")                                   // 最低保存速度
+	unsavedataCenter    = flag.String("unsavedatacenter","", "不测速的datacenter")                                   // 不测速的datacenter
+	// 将 unsavedataCenter 字符串按照逗号分割成数组
+        datacenters  = strings.Split(*unsavedataCenter, ",")
     speedTestURL = flag.String("url", "speed.cloudflare.com/__down?bytes=500000000", "测速文件地址") // 测速文件地址
 	enableTLS    = flag.Bool("tls", true, "是否启用TLS")                                       // TLS是否启用
 	TCPurl       = flag.String("tcpurl", "www.speedtest.net", "TCP请求地址")                   // TCP请求地址
@@ -272,7 +276,7 @@ func main() {
 				}()
 				for res := range resultChan {
 
-					downloadSpeed := getDownloadSpeed(res.ip, res.port)
+					downloadSpeed := getDownloadSpeed(res.ip, res.port, res.dataCenter, res.latency)
 					if downloadSpeed > float64(*speedLimit) {
 			                    countspeedL++
 			                }
@@ -333,7 +337,7 @@ func main() {
 	}
 	for _, res := range results {
 		if *speedTest > 0 {
-		if res.downloadSpeed >= float64(*speedLimit) {
+		if res.downloadSpeed >= *saveLimit {
 			writer.Write([]string{res.result.ip, strconv.Itoa(res.result.port), strconv.FormatBool(*enableTLS), res.result.dataCenter, res.result.region, res.result.cca1, res.result.cca2, res.result.city, res.result.latency, fmt.Sprintf("%.2f", res.downloadSpeed)})
 			}
 		} else {
@@ -383,7 +387,13 @@ func readIPs(File string) ([]string, error) {
 }
 
 // 测速函数
-func getDownloadSpeed(ip string, port int) float64 {
+func getDownloadSpeed(ip string, port int, dataCenter string, latency string) float64 {
+	// 判断 datacenter 是否为数组元素
+	for _, dc := range datacenters {
+		if dc == dataCenter {
+		    return 0
+		}
+	}
 	var protocol string
 	if *enableTLS {
 		protocol = "https://"
@@ -411,7 +421,7 @@ func getDownloadSpeed(ip string, port int) float64 {
 		}
 	}(conn)
 
-	fmt.Printf("正在测试IP %s 端口 %d\n", ip, port)
+	fmt.Printf("正在测试IP %s 端口 %d 数据中心 %s 延迟 %s\n", ip, port,dataCenter,latency)
 	startTime := time.Now()
 	// 创建HTTP客户端
 	client := http.Client{
