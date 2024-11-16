@@ -263,38 +263,49 @@ func main() {
 	}
 	var results []speedtestresult
 	if *speedTest > 0 {
-		fmt.Printf("开始测速\n")
-		var wg2 sync.WaitGroup
-		wg2.Add(*speedTest)
-		count = 0
-		countspeedL = 0
-		total := len(resultChan)
-		results = []speedtestresult{}
-		for i := 0; i < *speedTest; i++ {
-		        go func() {
-		            defer wg.Done()
-		            for res := range resultChan {
-		                downloadSpeed := getDownloadSpeed(res.ip, res.port, res.dataCenter, res.latency)
-		                if downloadSpeed > float64(*speedLimit) {
-		                    countspeedL++
-					if countspeedL > *maxIP {
-			                    fmt.Printf("已达到最大IP数限制, 停止测速\n")
-			                    return
-			                }
-		                }
-		                results = append(results, speedtestresult{result: res, downloadSpeed: downloadSpeed})
-		                count++
-		                percentage := float64(count) / float64(total) * 100
-		                fmt.Printf("已完成: %.2f%%\r", percentage)
-		                if count == total {
-		                    fmt.Printf("已完成: %.2f%%\n", percentage)
-		                }
-		                
-		            }
-		        }()
-		    }
-		wg2.Wait()
-	} else {
+    		fmt.Printf("开始测速\n")
+	    var wg2 sync.WaitGroup
+	    stopChan := make(chan struct{})
+	    wg2.Add(*speedTest)
+	    count = 0
+	    countspeedL = 0
+	    total := len(resultChan)
+	    results = []speedtestresult{}
+	
+	    for i := 0; i < *speedTest; i++ {
+	        go func() {
+	            defer wg2.Done()
+	            for {
+	                select {
+	                case res, ok := <-resultChan:
+	                    if !ok {
+	                        return
+	                    }
+	                    downloadSpeed := getDownloadSpeed(res.ip, res.port, res.dataCenter, res.latency)
+	                    if downloadSpeed > float64(*speedLimit) {
+	                        countspeedL++
+	                        if countspeedL > *maxIP {
+	                            fmt.Printf("已达到最大IP数限制, 停止测速\n")
+	                            close(stopChan)
+	                            return
+	                        }
+	                    }
+	                    results = append(results, speedtestresult{result: res, downloadSpeed: downloadSpeed})
+	                    count++
+	                    percentage := float64(count) / float64(total) * 100
+	                    fmt.Printf("已完成: %.2f%%\r", percentage)
+	                    if count == total {
+	                        fmt.Printf("已完成: %.2f%%\n", percentage)
+	                    }
+	                case <-stopChan:
+	                    return
+	                }
+	            }
+	        }()
+	    }
+	
+	    wg2.Wait()
+} else {
 		for res := range resultChan {
 			results = append(results, speedtestresult{result: res})
 		}
