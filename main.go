@@ -36,7 +36,7 @@ var (
 	speedTest    = flag.Int("speedtest", 5, "下载测速协程数量,设为0禁用测速")                            // 下载测速协程数量
 	speedLimit   = flag.Int("speedlimit", 0, "最低下载速度(MB/s)")                                   // 最低下载速度
 	maxIP        = flag.Int("maxip", 0, "最大保存满足speedLimit的ip个数")                                   // 最大保存ip个数
-	saveLimit    = flag.float64("savelimit", 0.5, "最低保存速度(MB/s)")                                   // 最低保存速度
+	saveLimit    = flag.Float64("savelimit", 0.5, "最低保存速度(MB/s)")                                   // 最低保存速度
 	unsavedataCenter    = flag.String("unsavedatacenter","", "不测速的datacenter")                                   // 不测速的datacenter
 	// 将 unsavedataCenter 字符串按照逗号分割成数组
         datacenters  = strings.Split(*unsavedataCenter, ",")
