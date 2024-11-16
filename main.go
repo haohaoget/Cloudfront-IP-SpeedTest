@@ -38,8 +38,7 @@ var (
 	maxIP        = flag.Int("maxip", 0, "最大保存满足speedLimit的ip个数")                                   // 最大保存ip个数
 	saveLimit    = flag.Float64("savelimit", 0.5, "最低保存速度(MB/s)")                                   // 最低保存速度
 	unsavedataCenter    = flag.String("unsavedatacenter","", "不测速的datacenter")                                   // 不测速的datacenter
-	// 将 unsavedataCenter 字符串按照逗号分割成数组
-        datacenters  = strings.Split(*unsavedataCenter, ",")
+	datacentersMap  make(map[string]bool)
     speedTestURL = flag.String("url", "speed.cloudflare.com/__down?bytes=500000000", "测速文件地址") // 测速文件地址
 	enableTLS    = flag.Bool("tls", true, "是否启用TLS")                                       // TLS是否启用
 	TCPurl       = flag.String("tcpurl", "www.speedtest.net", "TCP请求地址")                   // TCP请求地址
@@ -86,7 +85,10 @@ func increaseMaxOpenFiles() {
 
 func main() {
 	flag.Parse()
-
+	for _, dc := range strings.Split(unsavedataCenter, ",") {
+	    datacentersMap[dc] = true
+	}
+	
 	startTime := time.Now()
 	osType := runtime.GOOS
 	// 如果是linux系统,尝试提升文件描述符的上限
@@ -389,10 +391,8 @@ func readIPs(File string) ([]string, error) {
 // 测速函数
 func getDownloadSpeed(ip string, port int, dataCenter string, latency string) float64 {
 	// 判断 datacenter 是否为数组元素
-	for _, dc := range datacenters {
-		if dc == dataCenter {
-		    return 0
-		}
+	if datacentersMap[dataCenter] {
+		return 0
 	}
 	var protocol string
 	if *enableTLS {
