@@ -38,7 +38,7 @@ var (
 	maxIP        = flag.Int("maxip", 0, "最大保存满足speedLimit的ip个数")                                   // 最大保存ip个数
 	saveLimit    = flag.Float64("savelimit", 0.5, "最低保存速度(MB/s)")                                   // 最低保存速度
 	unsavedataCenter    = flag.String("unsavedatacenter","", "不测速的datacenter")                                   // 不测速的datacenter
-	datacentersMap  make(map[string]bool)
+	datacentersMap  = make(map[string]bool)
     speedTestURL = flag.String("url", "speed.cloudflare.com/__down?bytes=500000000", "测速文件地址") // 测速文件地址
 	enableTLS    = flag.Bool("tls", true, "是否启用TLS")                                       // TLS是否启用
 	TCPurl       = flag.String("tcpurl", "www.speedtest.net", "TCP请求地址")                   // TCP请求地址
