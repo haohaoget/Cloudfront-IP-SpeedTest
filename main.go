@@ -85,7 +85,7 @@ func increaseMaxOpenFiles() {
 
 func main() {
 	flag.Parse()
-	for _, dc := range strings.Split(unsavedataCenter, ",") {
+	for _, dc := range strings.Split(*unsavedataCenter, ",") {
 	    datacentersMap[dc] = true
 	}
 	
