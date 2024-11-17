@@ -256,7 +256,7 @@ func main() {
 	})
 	
 	// 将排序后的结果写回到 resultChan 中
-	resultChanr = make(chan result, len(resultChanresults))
+	resultChanr := make(chan result, len(resultChanresults))
 	for _, r := range resultChanresults {
 	    resultChanr <- r
 	}
