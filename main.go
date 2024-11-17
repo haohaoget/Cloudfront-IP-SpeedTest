@@ -256,9 +256,9 @@ func main() {
 	})
 	
 	// 将排序后的结果写回到 resultChan 中
-	resultChan = make(chan result, len(resultChanresults))
+	resultChanr = make(chan result, len(resultChanresults))
 	for _, r := range resultChanresults {
-	    resultChan <- r
+	    resultChanr <- r
 	}
 	
 	var results []speedtestresult
@@ -268,7 +268,7 @@ func main() {
 		wg2.Add(*speedTest)
 		count = 0
 		// countspeedL := 0
-		total := len(resultChan)
+		total := len(resultChanr)
 		results = []speedtestresult{}
 		for i := 0; i < *speedTest; i++ {
 			thread <- struct{}{}
@@ -277,7 +277,7 @@ func main() {
 					<-thread
 					wg2.Done()
 				}()
-				for res := range resultChan {
+				for res := range resultChanr {
 					downloadSpeed := getDownloadSpeed(res.ip, res.port, res.dataCenter, res.latency)
 					// if downloadSpeed > float64(*speedLimit) {
 			  //                   countspeedL++
@@ -295,7 +295,7 @@ func main() {
 		}
 		wg2.Wait()
 	} else {
-		for res := range resultChan {
+		for res := range resultChanr {
 			results = append(results, speedtestresult{result: res})
 		}
 	}
