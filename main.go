@@ -278,8 +278,11 @@ func main() {
 				}()
 				for res := range resultChan {
 					downloadSpeed := getDownloadSpeed(res.ip, res.port, res.dataCenter, res.latency)
+					if downloadSpeed > float64(*speedLimit) {
+			                    countspeedL++
+			                }
+					
 					results = append(results, speedtestresult{result: res, downloadSpeed: downloadSpeed})
-
 					count++
 					percentage := float64(count) / float64(total) * 100
 					fmt.Printf("已完成: %.2f%%\r", percentage)
