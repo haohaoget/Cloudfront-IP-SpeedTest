@@ -262,47 +262,36 @@ func main() {
 	    resultChan <- r
 	}
 	var results []speedtestresult
-	var wg2 sync.WaitGroup
 	if *speedTest > 0 {
-	    fmt.Printf("开始测速\n")
-	    wg2.Add(*speedTest)
-	    count = 0
-	    countspeedL = 0
-	    total := len(resultChan)
-	    results = make([]speedtestresult, 0, total)
-	    for i := 0; i < *speedTest; i++ {
-	        thread <- struct{}{}
-	        go func() {
-	            defer func() {
-	                <-thread
-	                wg2.Done()
-	            }()
-	            for res := range resultChan {
-			if countspeedL >= *maxIP {
-				fmt.Printf("已达到最大IP数限制, 停止测速\n")
-				return
-			}
-			downloadSpeed := getDownloadSpeed(res.ip, res.port, res.dataCenter, res.latency)
-			if downloadSpeed > float64(*speedLimit) {
-				countspeedL++
-				if countspeedL >= *maxIP {
-					fmt.Printf("已达到最大IP数限制, 停止测速\n")
-					return
+		fmt.Printf("开始测速\n")
+		var wg2 sync.WaitGroup
+		wg2.Add(*speedTest)
+		count = 0
+		total := len(resultChan)
+		results = []speedtestresult{}
+		for i := 0; i < *speedTest; i++ {
+			thread <- struct{}{}
+			go func() {
+				defer func() {
+					<-thread
+					wg2.Done()
+				}()
+				for res := range resultChan {
+
+					downloadSpeed := getDownloadSpeed(res.ip, res.port)
+					results = append(results, speedtestresult{result: res, downloadSpeed: downloadSpeed})
+
+					count++
+					percentage := float64(count) / float64(total) * 100
+					fmt.Printf("已完成: %.2f%%\r", percentage)
+					if count == total {
+						fmt.Printf("已完成: %.2f%%\033[0\n", percentage)
+					}
 				}
-			}
-			results = append(results, speedtestresult{result: res, downloadSpeed: downloadSpeed})
-			count++
-			percentage := float64(count) / float64(total) * 100
-			fmt.Printf("已完成: %.2f%%\r", percentage)
-	            }
-	        }()
-	    }
-	    wg2.Wait()
-	    if countspeedL >= *maxIP {
-		    fmt.Printf("已达到最大IP数限制, 停止测速\n")
-		    return
-	    }
-	}  else {
+			}()
+		}
+		wg2.Wait()
+	} else {
 		for res := range resultChan {
 			results = append(results, speedtestresult{result: res})
 		}
