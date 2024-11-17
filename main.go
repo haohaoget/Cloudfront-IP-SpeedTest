@@ -267,6 +267,7 @@ func main() {
 		var wg2 sync.WaitGroup
 		wg2.Add(*speedTest)
 		count = 0
+		countspeedL = 0
 		total := len(resultChan)
 		results = []speedtestresult{}
 		for i := 0; i < *speedTest; i++ {
@@ -277,8 +278,7 @@ func main() {
 					wg2.Done()
 				}()
 				for res := range resultChan {
-
-					downloadSpeed := getDownloadSpeed(res.ip, res.port)
+					downloadSpeed := getDownloadSpeed(res.ip, res.port, res.dataCenter, res.latency)
 					results = append(results, speedtestresult{result: res, downloadSpeed: downloadSpeed})
 
 					count++
