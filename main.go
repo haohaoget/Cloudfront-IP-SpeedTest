@@ -260,13 +260,14 @@ func main() {
 	for _, r := range resultChanresults {
 	    resultChan <- r
 	}
+	
 	var results []speedtestresult
 	if *speedTest > 0 {
 		fmt.Printf("开始测速\n")
 		var wg2 sync.WaitGroup
 		wg2.Add(*speedTest)
 		count = 0
-		countspeedL := 0
+		// countspeedL := 0
 		total := len(resultChan)
 		results = []speedtestresult{}
 		for i := 0; i < *speedTest; i++ {
@@ -278,9 +279,9 @@ func main() {
 				}()
 				for res := range resultChan {
 					downloadSpeed := getDownloadSpeed(res.ip, res.port, res.dataCenter, res.latency)
-					if downloadSpeed > float64(*speedLimit) {
-			                    countspeedL++
-			                }
+					// if downloadSpeed > float64(*speedLimit) {
+			  //                   countspeedL++
+			  //               }
 					
 					results = append(results, speedtestresult{result: res, downloadSpeed: downloadSpeed})
 					count++
