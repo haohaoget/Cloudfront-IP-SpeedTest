@@ -260,6 +260,7 @@ func main() {
 	for _, r := range resultChanresults {
 	    resultChanr <- r
 	}
+	close(resultChanr)
 	
 	var results []speedtestresult
 	if *speedTest > 0 {
@@ -267,7 +268,7 @@ func main() {
 		var wg2 sync.WaitGroup
 		wg2.Add(*speedTest)
 		count = 0
-		// countspeedL := 0
+		countspeedL := 0
 		total := len(resultChanr)
 		results = []speedtestresult{}
 		for i := 0; i < *speedTest; i++ {
@@ -279,9 +280,13 @@ func main() {
 				}()
 				for res := range resultChanr {
 					downloadSpeed := getDownloadSpeed(res.ip, res.port, res.dataCenter, res.latency)
-					// if downloadSpeed > float64(*speedLimit) {
-			  //                   countspeedL++
-			  //               }
+					if downloadSpeed > float64(*speedLimit) {
+			                    countspeedL++
+						if countspeedL > *maxIP {
+							fmt.Printf("已达到最大IP数限制, 停止测速\n")
+							return
+						}
+			                }
 					
 					results = append(results, speedtestresult{result: res, downloadSpeed: downloadSpeed})
 					count++
