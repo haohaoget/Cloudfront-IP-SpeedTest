@@ -126,7 +126,6 @@ func main() {
 	thread := make(chan struct{}, *maxThreads)
 
 	var count int
-	var countspeedL int
 	total := len(ips)
 
 	for _, ip := range ips {
@@ -267,7 +266,7 @@ func main() {
 		var wg2 sync.WaitGroup
 		wg2.Add(*speedTest)
 		count = 0
-		countspeedL = 0
+		countspeedL := 0
 		total := len(resultChan)
 		results = []speedtestresult{}
 		for i := 0; i < *speedTest; i++ {
