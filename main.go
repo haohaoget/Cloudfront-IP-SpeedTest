@@ -293,7 +293,7 @@ func main() {
 					percentage := float64(count) / float64(total) * 100
 					fmt.Printf("已完成: %.2f%%\r", percentage)
 					if count == total {
-						fmt.Printf("已完成: %.2f%%\033[0\n", percentage)
+						fmt.Printf("已完成: %.2f%%\n", percentage)
 					}
 				}
 			}()
@@ -348,7 +348,7 @@ func main() {
 	}
 	writer.Flush()
 	// 清除输出内容
-	fmt.Print("\033[2J")
+	//fmt.Print("\033[2J")
 	fmt.Printf("成功将结果写入文件 %s，耗时 %d秒\n", *outFile, time.Since(startTime)/time.Second)
 }
 
