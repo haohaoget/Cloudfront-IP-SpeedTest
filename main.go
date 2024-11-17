@@ -421,7 +421,7 @@ func getDownloadSpeed(ip string, port int, dataCenter string, latency string) fl
 		}
 	}(conn)
 
-	fmt.Printf("正在测试IP %s 端口 %d 数据中心 %s 延迟 %s\n", ip, port,dataCenter,latency)
+	//fmt.Printf("正在测试IP %s 端口 %d 数据中心 %s 延迟 %s\n", ip, port,dataCenter,latency)
 	startTime := time.Now()
 	// 创建HTTP客户端
 	client := http.Client{
@@ -437,7 +437,7 @@ func getDownloadSpeed(ip string, port int, dataCenter string, latency string) fl
 	req.Close = true
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("IP %s 端口 %d 测速无效\n", ip, port)
+		fmt.Printf("IP %s 端口 %d  数据中心 %s 延迟 %s 测速无效\n", ip, port, dataCenter, latency)
 		return 0
 	}
 	defer func(Body io.ReadCloser) {
@@ -453,6 +453,6 @@ func getDownloadSpeed(ip string, port int, dataCenter string, latency string) fl
 	speed := float64(written) / duration.Seconds() / 1024 / 1024
 
 	// 输出结果
-	fmt.Printf("IP %s 端口 %d 下载速度 %.2f MB/s\n", ip, port, speed)
+	fmt.Printf("IP %s 端口 %d  数据中心 %s 延迟 %s 下载速度 %.2f MB/s\n", ip, port, dataCenter, latency, speed)
 	return speed
 }
