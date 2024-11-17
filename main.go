@@ -263,42 +263,63 @@ func main() {
 	close(resultChanr)
 	
 	var results []speedtestresult
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	
 	if *speedTest > 0 {
-		fmt.Printf("开始测速\n")
-		var wg2 sync.WaitGroup
-		wg2.Add(*speedTest)
-		count = 0
-		countspeedL := 0
-		total := len(resultChanr)
-		results = []speedtestresult{}
-		for i := 0; i < *speedTest; i++ {
-			thread <- struct{}{}
-			go func() {
-				defer func() {
-					<-thread
-					wg2.Done()
-				}()
-				for res := range resultChanr {
-					downloadSpeed := getDownloadSpeed(res.ip, res.port, res.dataCenter, res.latency)
-					if downloadSpeed > float64(*speedLimit) {
-			                    countspeedL++
-						if countspeedL > *maxIP {
-							fmt.Printf("已达到最大IP数限制, 停止测速\n")
-							return
-						}
-			                }
-					
-					results = append(results, speedtestresult{result: res, downloadSpeed: downloadSpeed})
-					count++
-					percentage := float64(count) / float64(total) * 100
-					fmt.Printf("已完成: %.2f%%\r", percentage)
-					if count == total {
-						fmt.Printf("已完成: %.2f%%\n", percentage)
-					}
-				}
-			}()
-		}
-		wg2.Wait()
+	    fmt.Printf("开始测速\n")
+	    var wg2 sync.WaitGroup
+	    wg2.Add(*speedTest)
+	    count = 0
+	    countspeedL := 0
+	    total := len(resultChanr)
+	    results = []speedtestresult{}
+	
+	    // 监听系统信号
+	    go func() {
+	        sigChan := make(chan os.Signal, 1)
+	        signal.Notify(sigChan, os.Interrupt)
+	        <-sigChan
+	        cancel()
+	    }()
+	
+	    for i := 0; i < *speedTest; i++ {
+	        thread <- struct{}{}
+	        go func() {
+	            defer func() {
+	                <-thread
+	                wg2.Done()
+	            }()
+	
+	            for {
+	                select {
+	                case res, ok := <-resultChanr:
+	                    if !ok {
+	                        return
+	                    }
+	                    downloadSpeed := getDownloadSpeed(res.ip, res.port, res.dataCenter, res.latency)
+	                    if downloadSpeed > float64(*speedLimit) {
+	                        countspeedL++
+	                        if countspeedL > *maxIP {
+	                            fmt.Printf("已达到最大IP数限制, 停止测速\n")
+	                            return
+	                        }
+	                    }
+	                    results = append(results, speedtestresult{result: res, downloadSpeed: downloadSpeed})
+	                    count++
+	                    percentage := float64(count) / float64(total) * 100
+	                    fmt.Printf("已完成: %.2f%%\r", percentage)
+	                    if count == total {
+	                        fmt.Printf("已完成: %.2f%%\n", percentage)
+	                    }
+	                case <-ctx.Done():
+	                    fmt.Println("测速已中断")
+	                    return
+	                }
+	            }
+	        }()
+	    }
+	    wg2.Wait()
 	} else {
 		for res := range resultChanr {
 			results = append(results, speedtestresult{result: res})
