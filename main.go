@@ -278,18 +278,22 @@ func main() {
 	                wg2.Done()
 	            }()
 	            for res := range resultChan {
-	                downloadSpeed := getDownloadSpeed(res.ip, res.port, res.dataCenter, res.latency)
-	                if downloadSpeed > float64(*speedLimit) {
-	                    	countspeedL++
+			if countspeedL >= *maxIP {
+				fmt.Printf("已达到最大IP数限制, 停止测速\n")
+				return
+			}
+			downloadSpeed := getDownloadSpeed(res.ip, res.port, res.dataCenter, res.latency)
+			if downloadSpeed > float64(*speedLimit) {
+				countspeedL++
 				if countspeedL >= *maxIP {
 					fmt.Printf("已达到最大IP数限制, 停止测速\n")
-				    	return
+					return
 				}
-	                }
-	                results = append(results, speedtestresult{result: res, downloadSpeed: downloadSpeed})
-	                count++
-	                percentage := float64(count) / float64(total) * 100
-	                fmt.Printf("已完成: %.2f%%\r", percentage)
+			}
+			results = append(results, speedtestresult{result: res, downloadSpeed: downloadSpeed})
+			count++
+			percentage := float64(count) / float64(total) * 100
+			fmt.Printf("已完成: %.2f%%\r", percentage)
 	            }
 	        }()
 	    }
