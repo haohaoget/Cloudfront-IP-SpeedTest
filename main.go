@@ -121,13 +121,31 @@ func processInputFiles(filenames []string) []*IPData {
 
 func latencyTest(ips []*IPData) []*IPData {
 	var (
-		wg       sync.WaitGroup
-		mu       sync.Mutex
-		results  []*IPData
-		client   = &http.Client{Timeout: 5 * time.Second}
+		wg         sync.WaitGroup
+		mu         sync.Mutex
+		results    []*IPData
+		client     = &http.Client{Timeout: 5 * time.Second}
+		total      = len(ips)
+		processed  int32
+		progressMu sync.Mutex
 	)
 
 	sem := make(chan struct{}, getCPUCount())
+
+	// 进度打印协程
+	go func() {
+		for {
+			time.Sleep(1 * time.Second)
+			current := atomic.LoadInt32(&processed)
+			progressMu.Lock()
+			fmt.Printf("\r[Latency Test] 进度：%d/%d (%.1f%%)", 
+				current, total, float64(current)/float64(total)*100)
+			progressMu.Unlock()
+			if int(current) >= total {
+				break
+			}
+		}
+	}()
 
 	for _, ip := range ips {
 		wg.Add(1)
@@ -137,6 +155,7 @@ func latencyTest(ips []*IPData) []*IPData {
 			defer func() {
 				<-sem
 				wg.Done()
+				atomic.AddInt32(&processed, 1)
 			}()
 
 			url := fmt.Sprintf("http://%s:%s", ip.IP, ip.Port)
@@ -164,6 +183,7 @@ func latencyTest(ips []*IPData) []*IPData {
 	}
 
 	wg.Wait()
+	fmt.Println("\n延迟测试完成")
 
 	// 排序并过滤中国节点
 	filtered := filterAndSort(results)
@@ -235,13 +255,17 @@ func speedTest(ips []*IPData, testURLs []string) {
 
 					output, _ := cmd.CombinedOutput()
 					if match := ipRegex.FindString(string(output)); match != "" {
+						// log.Printf(string(output))
 						fields := strings.Fields(string(output))
 						if len(fields) >= 6 {
 							speed, _ := strconv.ParseFloat(fields[5], 64)
 							if speed >= *speedmin {
 								mu.Lock()
-								ip.Speed = fields[5]
+								ip.Speed = speed
 								results = append(results, ip)
+								// 输出测速结果
+								log.Printf("[Speed] 发现有效IP %s:%s 速度 %.1fMB/s (已收集 %d/%d)",
+									ip.IP, ip.Port, speed, len(results), *ipnumsave)
 								if len(results) >= *ipnumsave {
 									cancel()
 								}
@@ -279,16 +303,21 @@ func writeFinalResults(ips []*IPData) {
 	defer file.Close()
 
 	for _, ip := range ips {
-		org := "other"
-		switch {
-		case strings.Contains(strings.ToLower(ip.AsOrganization), "alibaba"):
-			org = "ali"
-		case strings.Contains(strings.ToLower(ip.AsOrganization), "tencent"):
-			org = "tx"
-		case strings.Contains(strings.ToLower(ip.AsOrganization), "china mobile"):
-			org = "cm"
-		case strings.Contains(strings.ToLower(ip.AsOrganization), "china telecom"):
-			org = "ct"
+		// 处理组织信息
+		org := strings.TrimSpace(ip.AsOrganization)
+		if org == "" {
+			org = "other"
+		} else {
+			switch {
+			case strings.Contains(strings.ToLower(org), "alibaba"):
+				org = "ali"
+			case strings.Contains(strings.ToLower(org), "tencent"):
+				org = "tx"
+			case strings.Contains(strings.ToLower(org), "china mobile"):
+				org = "cm"
+			case strings.Contains(strings.ToLower(org), "china telecom"):
+				org = "ct"
+			}
 		}
 
 		line := fmt.Sprintf("%s:%s#%s_%s_%dms_%sMB\n",
