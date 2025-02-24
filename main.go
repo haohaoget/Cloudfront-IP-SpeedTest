@@ -17,6 +17,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"context"
+	"math/rand"
 	"time"
 )
 
@@ -223,7 +225,7 @@ func speedTest(ips []*IPData, testURLs []string) {
 				case <-ctx.Done():
 					return
 				default:
-					cmd := exec.Command("../CloudflareST",
+					cmd := exec.Command("./CloudflareST",
 						"-ip", ip.IP,
 						"-tp", ip.Port,
 						"-url", testURLs[rand.Intn(len(testURLs))],
