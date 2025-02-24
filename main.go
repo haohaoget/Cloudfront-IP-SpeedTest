@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"runtime"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -261,7 +262,7 @@ func speedTest(ips []*IPData, testURLs []string) {
 							speed, _ := strconv.ParseFloat(fields[5], 64)
 							if speed >= *speedmin {
 								mu.Lock()
-								ip.Speed = string(speed)
+								ip.Speed = fields[5]
 								results = append(results, ip)
 								// 输出测速结果
 								log.Printf("[Speed] 发现有效IP %s:%s 速度 %.1fMB/s (已收集 %d/%d)",
