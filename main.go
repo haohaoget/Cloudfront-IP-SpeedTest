@@ -255,23 +255,25 @@ func speedTest(ips []*IPData, testURLs []string) {
 						"-p", "20")
 
 					output, _ := cmd.CombinedOutput()
-					if match := ipRegex.FindString(string(output)); match != "" {
-						// log.Printf(string(output))
-						fields := strings.Fields(string(output))
-						if len(fields) >= 6 {
-							speed, _ := strconv.ParseFloat(fields[5], 64)
-							if speed >= *speedmin {
-								mu.Lock()
-								ip.Speed = fields[5]
-								results = append(results, ip)
-								// 输出测速结果
-								log.Printf("[Speed] 发现有效IP %s:%s 速度 %.1fMB/s (已收集 %d/%d)",
-									ip.IP, ip.Port, speed, len(results), *ipnumsave)
-								if len(results) >= *ipnumsave {
-									cancel()
+					lines := strings.Split(string(output), "\n")
+					for _, line := range lines {
+						if ipRegex.MatchString(line) {
+							fields := strings.Fields(line)
+							if len(fields) >= 6 {
+								speed, _ := strconv.ParseFloat(fields[5], 64)
+								if speed >= *speedmin {
+									mu.Lock()
+									ip.Speed = fields[5]
+									results = append(results, ip)
+									// 输出测速结果
+									log.Printf("[Speed] 发现有效IP %s:%s 速度 %.1fMB/s (已收集 %d/%d)",
+										ip.IP, ip.Port, speed, len(results), *ipnumsave)
+									if len(results) >= *ipnumsave {
+										cancel()
+									}
+									mu.Unlock()
+									successChan <- ip
 								}
-								mu.Unlock()
-								successChan <- ip
 							}
 						}
 					}
